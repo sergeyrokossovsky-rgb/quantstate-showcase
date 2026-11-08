@@ -1,4 +1,5 @@
 # QuantState — engineering showcase
+[![tests](https://github.com/sergeyrokossovsky-rgb/quantstate-showcase/actions/workflows/tests.yml/badge.svg)](https://github.com/sergeyrokossovsky-rgb/quantstate-showcase/actions/workflows/tests.yml)
 
 **Author:** Sergei Rokossovskii, founder and owner of **QuantState LLC** (Wyoming, USA) · [quantstate.pro](https://quantstate.pro)
 
