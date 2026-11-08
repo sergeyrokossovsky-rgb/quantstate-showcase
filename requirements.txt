@@ -1,0 +1,7 @@
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+statsmodels>=0.14
+jinja2>=3.1
+pytest>=7.4
+# optional, for PNG rendering: playwright>=1.40  (then: python -m playwright install chromium)
