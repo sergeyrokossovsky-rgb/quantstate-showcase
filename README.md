@@ -1,5 +1,4 @@
 # QuantState — engineering showcase
-[![tests](https://github.com/sergeyrokossovsky-rgb/quantstate-showcase/actions/workflows/tests.yml/badge.svg)](https://github.com/sergeyrokossovsky-rgb/quantstate-showcase/actions/workflows/tests.yml)
 
 **Author:** Sergei Rokossovskii, founder and owner of **QuantState LLC** (Wyoming, USA) · [quantstate.pro](https://quantstate.pro)
 
@@ -68,12 +67,27 @@ On the synthetic market the demo prints a full scorecard and an honest verdict: 
 ### 2. `src/qs_cards` — market-state card for Telegram
 A Jinja2 template is rendered to a PNG by headless Chromium (Playwright); a plain-text fallback carries the same context if rendering or delivery fails. Templates are autoescaped.
 
-### 3. `ninjascript/FeedLagMonitor.cs` — NinjaTrader 8 indicator
-Detects a delayed market-data stream. On heavy sessions NinjaTrader can process events minutes after the exchange time while Chart Trader still shows the live quote. Two independent signals:
-- event time against a clock baseline (rolling minimum, clamped);
+### 3. `ninjascript/FeedLagMonitor.cs` + `src/qs_feedlag` — is the data late, and why?
+On heavy sessions NinjaTrader can process events minutes after the exchange time while Chart Trader still shows the live quote. The indicator flags a stale stream from two independent signals:
+- trade time against a clock baseline (robust rolling minimum, never below zero, confirmed on consecutive trades and held for a few seconds);
 - trade price against the current bid/ask.
 
 Recovery uses hysteresis; Market Replay is ignored. The production engine uses the same principle to block entries, cancel pending orders and pause stop adjustments while the data is stale.
+
+v2 adds a CSV row every 10 s per instrument (lag, longest pause between events). `qs_feedlag` reads these files and classifies every lag episode by what the other instruments did at the same moment:
+
+| Verdict | Meaning |
+|---|---|
+| `shared` | other instruments fell behind too → network, data feed or the whole PC |
+| `local` | others stayed current → this instrument's processing inside the platform |
+
+The growth rate in s/min separates a building queue from a constant clock offset.
+
+```bash
+python -m qs_feedlag.episodes feedlag_ES_20261111.csv feedlag_NQ_20261111.csv feedlag_RTY_20261111.csv   # run from src/
+```
+
+**Field lesson behind v2.** The first version measured every event against a minimum-based baseline. A few non-trade events carried a local-clock stamp 18 s ahead. That pulled the baseline negative and produced dozens of false 3-second alarms a night. Measuring trades only and clamping the baseline at zero removed them without hiding real backlogs.
 
 ---
 
