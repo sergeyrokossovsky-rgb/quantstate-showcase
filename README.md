@@ -64,6 +64,11 @@ pytest -q
 ```
 On the synthetic market the demo prints a full scorecard and an honest verdict: the volatility model passes its criteria, while the range quantiles do not reach the required 5% gain. Reporting a FAIL is part of the method.
 
+### 1b. `src/qs_range/intraday.py` — next-hour volatility and range
+Intraday HAR on one-minute returns: realised variance of the last 5 / 30 / 60 minutes plus hour-of-session effects → variance of the next 60 minutes. The **range** of the next hour (what stops and targets need) is modelled separately with empirical quantiles, and a live 0–100 index is the percentile of the forecast among past forecasts at the same time of day.
+
+**Lesson worth stating.** An index built as "realised so far / expected so far" looks intuitive, but it divides out the volatility level. In our out-of-sample checks it ranked the next hour *worse* than plain VIX. A level-based index ranked it clearly better. The sample ships the level version.
+
 ### 2. `src/qs_cards` — market-state card for Telegram
 A Jinja2 template is rendered to a PNG by headless Chromium (Playwright); a plain-text fallback carries the same context if rendering or delivery fails. Templates are autoescaped.
 
