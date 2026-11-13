@@ -94,6 +94,20 @@ python -m qs_feedlag.episodes feedlag_ES_20261111.csv feedlag_NQ_20261111.csv fe
 
 **Field lesson behind v2.** The first version measured every event against a minimum-based baseline. A few non-trade events carried a local-clock stamp 18 s ahead. That pulled the baseline negative and produced dozens of false 3-second alarms a night. Measuring trades only and clamping the baseline at zero removed them without hiding real backlogs.
 
+### 4. `src/qs_gate` — "state opens a window, trigger acts inside it"
+A slow market-state score (0–100, evaluated once per closed bar) never picks a trade by itself; it only opens a time window in which a faster trigger may act. `PermissionWindow` is the bookkeeping for that pattern and runs identically in a back-test and live:
+- the window opens when the score reaches the threshold **while armed**; it re-arms only after the score stayed below the threshold for N consecutive bars, so one long excursion cannot open a window every bar;
+- allowances are booked on **fills**, not on attempts, so a cancelled order does not burn one;
+- the decision for bar *t+1* uses only the state after bar *t* closed (no look-ahead).
+
+`next_deadline` stamps a wall-clock exit (exchange time, DST-safe) on the position at entry, plus a quiet period right after it. Stamping at entry matters when configuration profiles (e.g. day session / overnight) switch while a position is open: the deadline belongs to the trade, not to whichever profile is active.
+
+**Field lesson behind it.** A filter that is right on average can still be wrong in a production detail. Two examples from the same release: a limit entry that the platform expired at every bar close on a 1-minute chart (fixed by making entries live until the engine cancels them, and by detecting cancels the engine did not request), and a time exit that would have been lost when the session profile switched (fixed by the stamp-at-entry rule above). New filters ship in shadow mode first: the engine journals "would enter / would block" next to every real decision.
+
+```bash
+python -m pytest -q tests/test_qs_gate.py
+```
+
 ---
 
 ## Not included (proprietary)
