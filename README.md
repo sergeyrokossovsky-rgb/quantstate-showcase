@@ -117,7 +117,10 @@ flowchart LR
 - **Assembly hashes** are registered on the server before a release can go live.
 - **One-click installers** with SHA-256 manifests, staged over-the-air updates and integrity checks of the deployed sources.
 
-### 6. Engineering log → [docs/ENGINEERING_LOG.md](docs/ENGINEERING_LOG.md)
+### 6. QS Pulse — a forecast graded in public → [docs/PULSE.md](docs/PULSE.md)
+Every trading day at 9:35 ET an 80% band for the S&P 500 session range is fixed and graded after the close, misses included. Out-of-sample 2025–26: 81.3 % of 439 sessions inside the band, 28 % lower volatility-forecast error than the VIX-implied forecast. Cards go to X and Facebook after approval.
+
+### 7. Engineering log → [docs/ENGINEERING_LOG.md](docs/ENGINEERING_LOG.md)
 Real production incidents and research traps, how they were found and what rule each one added — for example:
 - a 12-hour timestamp shift;
 - a look-ahead bias that made a filter look 11–14 ticks better than it was;
@@ -155,6 +158,7 @@ Details and the protocol are in [docs/RESEARCH.md](docs/RESEARCH.md).
 | Module | What it shows | Tests |
 |---|---|---|
 | [`src/qs_range`](src/qs_range) | **Daily range and volatility forecasting:**<br/>• HAR-X and quantile regression with non-crossing quantiles;<br/>• implied-volatility baseline;<br/>• QLIKE, pinball loss, coverage, Diebold–Mariano, Brier skill, ECE;<br/>• exceedance probabilities consistent with the quantiles.<br/>`intraday.py` — next-hour volatility and range from minute bars. | `test_qs_range.py`, `test_qs_intraday.py` |
+| [`src/qs_pulse`](src/qs_pulse) | **Public forecast record:**<br/>• rule-based NYSE calendar (holidays, observed days, early closes);<br/>• grading of a published band (inside / above / below) and coverage;<br/>• trade-record metrics in ticks per contract after costs, Sharpe only from 20 days. | `test_qs_pulse.py` |
 | [`src/qs_feedlag`](src/qs_feedlag) + [`ninjascript/FeedLagMonitor.cs`](ninjascript/FeedLagMonitor.cs) | **Is the market data late, and why?**<br/>• NinjaTrader 8 indicator: trade-time vs clock baseline, price vs bid/ask, hysteresis;<br/>• episode classifier: shared (network / PC) vs local (one instrument). | `test_qs_feedlag.py` |
 | [`src/qs_gate`](src/qs_gate) | **"State opens a window, the trigger acts inside it":**<br/>• threshold-armed permission window with re-arming and fill-based allowance;<br/>• DST-safe exit deadline stamped on the position at entry. | `test_qs_gate.py` |
 | [`src/qs_cards`](src/qs_cards) | Market-state card: Jinja2 → PNG via headless Chromium, with a plain-text fallback. | `test_qs_cards.py` |

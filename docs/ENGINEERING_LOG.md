@@ -85,3 +85,14 @@ Short write-ups of real problems: how each was found and the rule it added. Spec
 **Fix.** Cross-day correlation computed separately for each time slot.
 
 **Rule.** Make sure the metric is not measuring the clock.
+
+## 9. A model boundary that faked a new signal
+**Symptom.** A session-aware index (separate overnight and day models) dropped to zero for 30 minutes before the day-session open and then jumped back. A filter downstream read the dip as "the index went quiet", re-armed and raised a "new" signal, although the market move simply continued.
+
+**Cause.** The overnight label required a move to finish before the day session opens. In the last half-hour of the night such a move is impossible by construction, so the model correctly predicted zero — for a question nobody was asking at that time.
+
+**Fix.**
+- The day model takes over earlier: the switch time is a setting, and the default was chosen after a visual review.
+- At the switch, the history shows no case where an active overnight signal falls below the day threshold.
+
+**Rule.** When two models hand over, check the hand-over on history: the score must not create events that only exist because of the label definition.
